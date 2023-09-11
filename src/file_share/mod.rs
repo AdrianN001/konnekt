@@ -1,3 +1,3 @@
 pub mod filebuilder;
 pub mod main;
-mod sender;
+pub mod sender;
