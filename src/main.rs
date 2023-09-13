@@ -2,6 +2,7 @@ use tokio;
 
 use crate::traits::server::ConnectableService;
 mod file_share;
+mod screen_share;
 mod traits;
 #[tokio::main]
 async fn main() {
