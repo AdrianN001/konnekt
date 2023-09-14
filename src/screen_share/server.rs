@@ -1,11 +1,15 @@
 use std::sync::Arc;
 
-use crate::traits;
 use anyhow::Error;
-use tokio::{net, sync::Mutex};
+use tokio::{
+    net,
+    sync::{mpsc, mpsc::Receiver, mpsc::Sender, Mutex},
+};
 
 struct ScreenShareService {
     listener: net::TcpListener,
+    frame_buffer: Arc<Mutex<Vec<u8>>>,
+    output_channel_for_frames: Receiver<Vec<u8>>,
 }
 
 struct ScreenShareSenderService {
@@ -15,12 +19,25 @@ struct ScreenShareSenderService {
 }
 
 impl ScreenShareService {
-    pub async fn new(port: i32, debug_text: String) -> Result<Self, Error> {
+    pub async fn new(
+        port: i32,
+        channel: Receiver<Vec<u8>>,
+        debug_text: String,
+    ) -> Result<Self, Error> {
         let listener = net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
 
         println!("{}", debug_text);
 
-        Ok(ScreenShareService { listener: listener })
+        Ok(ScreenShareService {
+            listener: listener,
+            output_channel_for_frames: channel,
+            frame_buffer: Arc::new(Mutex::new(Vec::new())),
+        })
+    }
+    pub async fn start() -> ! {
+        //let (tx, rx): (Sender<Vec<u8>>, Receiver<Vec<u8>>) = mpsc::channel(10);
+
+        loop {}
     }
 }
 

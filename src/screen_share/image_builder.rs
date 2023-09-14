@@ -1,6 +1,7 @@
 use anyhow::Error;
+use flate2::{write::GzEncoder, Compression};
 use screenshots::Screen;
-use std::time::Instant;
+use std::{io::Write, time::Instant};
 
 fn take_screenshot(disply_id: usize) -> Result<Vec<u8>, Error> {
     let start = Instant::now();
@@ -19,7 +20,13 @@ fn take_screenshot(disply_id: usize) -> Result<Vec<u8>, Error> {
         .map(|(_, item)| item.to_owned())
         .collect::<Vec<_>>())
 }
+
 // TODO WRITE IT
-fn compress_buffer(buffer: &Vec<u8>) -> Result<Vec<u8>, Error> {
-    Ok(vec![])
+fn compress_buffer(mut buffer: &Vec<u8>) -> Result<Vec<u8>, Error> {
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::fast());
+    let _ = encoder.write_all(&buffer);
+
+    let body = encoder.finish()?;
+
+    Ok(body)
 }
