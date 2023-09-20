@@ -20,14 +20,23 @@ fn get_file_name(file_path: &str) -> String {
 // TODO TEST
 // Reads from fs and
 pub async fn compress_file(file_path: &str) -> Result<Vec<u8>, Error> {
+    
+    // Read the file 
     let mut file = tokio::fs::File::open(file_path).await?;
 
+
+    // Get metadata
     let size = file.metadata().await?.len();
     let name = get_file_name(file_path);
 
+    // Load the file to a buffer
     let mut file_buffer: Vec<u8> = Vec::new();
     file.read_exact(&mut file_buffer).await?;
 
+
+    let mut checksum = sha256::digest_bytes(&file_buffer).as_bytes().to_vec();
+
+    // Compress the file
     let mut encoder = GzEncoder::new(Vec::new(), Compression::fast());
     let _ = encoder.write_all(&mut file_buffer);
 
@@ -38,7 +47,9 @@ pub async fn compress_file(file_path: &str) -> Result<Vec<u8>, Error> {
     let mut file_name_in_bytes = name.as_bytes().to_vec();
     file_name_in_bytes.resize(60 - file_name_in_bytes.len(), 0);
 
+    // Create a new buffer for the 
     let mut result = Vec::new();
+    result.append(&mut checksum);
     result.append(&mut file_size_in_bytes);
     result.append(&mut file_name_in_bytes);
     result.append(&mut body);
@@ -50,14 +61,24 @@ pub async fn compress_file(file_path: &str) -> Result<Vec<u8>, Error> {
 pub fn decompress_file(
     compressed_file: &Vec<u8>,
     file_metadata: crate::file_share::main::FileMetaData,
-) {
+) -> Result<(), String> {
     let file_name = file_metadata.file_name;
 
     let mut new_file = fs::File::create(file_name).unwrap();
 
     let mut gz = read::GzDecoder::new(&compressed_file[..]);
 
-    let mut s = Vec::new();
-    gz.read_to_end(&mut s).unwrap();
-    let _ = new_file.write_all(&s);
+    let mut file_buffer = vec![];
+    gz.read_to_end(&mut file_buffer).unwrap();
+
+
+    let checksum = sha256::digest_bytes(&file_buffer).as_bytes().to_vec();
+    if file_metadata.checksum.to_vec() != checksum {
+        dbg!(checksum);
+        dbg!(file_metadata.checksum.to_vec());
+        return Err("The checksum didn't match".to_string());
+    }
+
+    let _ = new_file.write_all(&mut file_buffer);
+    Ok(())
 }
