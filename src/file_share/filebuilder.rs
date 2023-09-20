@@ -57,7 +57,7 @@ pub fn decompress_file(
 
     let mut gz = read::GzDecoder::new(&compressed_file[..]);
 
-    let mut s = String::new();
-    gz.read_to_string(&mut s).unwrap();
-    let _ = new_file.write_all(s.as_bytes());
+    let mut s = Vec::new();
+    gz.read_to_end(&mut s).unwrap();
+    let _ = new_file.write_all(&s);
 }
