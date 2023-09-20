@@ -22,7 +22,7 @@ fn take_screenshot(disply_id: usize) -> Result<Vec<u8>, Error> {
 }
 
 // TODO WRITE IT
-fn compress_buffer(mut buffer: &Vec<u8>) -> Result<Vec<u8>, Error> {
+fn compress_buffer(buffer: &Vec<u8>) -> Result<Vec<u8>, Error> {
     let mut encoder = GzEncoder::new(Vec::new(), Compression::fast());
     let _ = encoder.write_all(&buffer);
 

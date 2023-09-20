@@ -11,6 +11,6 @@ pub async fn send_file(ip_address: String, port: i32, file_name: String) -> Resu
         Err(x) => return Err(x),
     };
 
-    let _ = stream.write_all(&compressed_data);
+    let _ = stream.write_all(&compressed_data).await;
     Ok(())
 }
