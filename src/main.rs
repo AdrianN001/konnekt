@@ -7,10 +7,10 @@ mod screen_share;
 mod traits;
 #[tokio::main]
 async fn main() {
-    let _ = send_file("192.168.1.15".to_string(), 6000, "~/Videos/.erdekes/cohan2.mp4".to_string()).await;
+    let _ = send_file("192.168.1.15".to_string(), 6000, "/home/noirangel/Videos/.erdekes/cohan2.mp4".to_string()).unwrap();
     tokio::task::spawn_blocking(|| {
         let mut service =
-            file_share::main::FileShareService::new(6000, "File Sharing Service Started").unwrap();
+            file_share::server::FileShareService::new(6000, "File Sharing Service Started").unwrap();
         service.start();
     });
 }
