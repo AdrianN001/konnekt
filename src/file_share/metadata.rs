@@ -36,7 +36,7 @@ impl FileMetaData {
             Err(x) => return Err(x.into()),
         };
 
-        Ok(FileMetaData {
+        Ok(Self {
             file_size: file_size_in_unsigned,
             file_name: file_name_in_string.to_owned(),
         })
@@ -75,7 +75,7 @@ impl FileMetaData {
         };
 
 
-        Ok(FileMetaData{
+        Ok(Self{
             file_size: size,
             file_name: name
         })
