@@ -11,8 +11,6 @@ mod traits;
 #[tokio::main]
 async fn main() {
     
-    let _ = send_file("192.168.1.15".to_string(), 6000, "~/Videos/.erdekes/cohan2.mp4".to_string()).await; 
-
     let (tx, rx): (Sender<Vec<u8>>, Receiver<Vec<u8>>) = mpsc::channel(10);
 
     tokio::task::spawn_blocking(|| {
@@ -25,9 +23,8 @@ async fn main() {
         7000,
         rx,
         "Screen Sharing Service Started".to_string(),
-    )?;
+    ).unwrap();
 
     thread::spawn(move || screen_share_service.start());
 
-    Ok(())
 }

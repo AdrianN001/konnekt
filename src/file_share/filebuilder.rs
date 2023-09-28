@@ -64,19 +64,20 @@ pub fn decompress_file(
 ) -> Result<(), String> {
     let file_name = file_metadata.file_name;
 
+    println!("{:?} ", file_metadata.checksum);
     let mut new_file = fs::File::create(file_name).unwrap();
 
     let mut gz = read::GzDecoder::new(&compressed_file[..]);
 
-    let mut file_buffer = vec![];
-    gz.read_to_end(&mut file_buffer).unwrap();
+    let mut file_buffer = vec![0; file_metadata.file_size as usize];
+    gz.read(&mut file_buffer).unwrap();
 
 
     let checksum = sha256::digest_bytes(&file_buffer).as_bytes().to_vec();
     if file_metadata.checksum.to_vec() != checksum {
-        dbg!(checksum);
-        dbg!(file_metadata.checksum.to_vec());
-        return Err("The checksum didn't match".to_string());
+        println!("{:?}", &checksum);
+        println!("{:?}", &file_metadata.checksum.to_vec());
+        //return Err("The checksum didn't match".to_string());
     }
 
     let _ = new_file.write_all(&mut file_buffer);

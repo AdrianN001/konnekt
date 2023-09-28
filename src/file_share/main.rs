@@ -17,8 +17,9 @@ pub struct FileShareService {
     listener: std::net::TcpListener,
 }
 
+#[derive(Debug)]
 pub struct FileMetaData {
-    file_size: u64,
+    pub file_size: u64,
     pub checksum: CheckSum,
     pub file_name: String,
 }
@@ -48,25 +49,39 @@ impl server::ConnectableService for FileShareService {
             // Read the header from the file;
             let mut header: FileHeader = [0; 132];
 
-            let _ = stream.read_exact(&mut header).unwrap();
+            stream.read(&mut header);
 
             // Debug
             // TODO Create something for println
-            if let Ok(metadata) = FileMetaData::new(&header) {
-                metadata.print_info();
 
-                // Read the actuall file
-                let mut buffer: Vec<u8> = Vec::new();
+            match FileMetaData::new(&header) {
+                Ok(metadata) => {
+                    metadata.print_info();
 
-                let _ = stream.read_to_end(&mut buffer);
+                    // Read the actuall file
+                    thread::spawn(move ||{
 
-                thread::spawn(move ||{
-                        if let Err(x) = decompress_file(&buffer, metadata){
-                            println!("{}", x);
-                        }
-                });
-               
+                      
+
+
+                            let mut whole_buffer: Vec<u8> = Vec::new();
+                            
+
+                            std::io::copy(&mut stream, &mut whole_buffer).unwrap();
+
+                            println!("BODY LEN {}", &whole_buffer.len());
+                            
+                            if let Err(x) = decompress_file(&whole_buffer, metadata){
+                                println!("{}", x);
+                            }
+                    });
+                }, 
+                Err(x) => {
+                    println!("{}", x);
+                    continue;
+                }
             }
+
         }
     }
 }
@@ -84,12 +99,19 @@ impl FileMetaData {
         };
         let file_size_in_unsigned = u64::from_be_bytes(file_size_in_bytes);
 
-        let file_name_in_bytes: FileNameHeader = header[72..header.len()].try_into().unwrap();
+        let file_name_in_bytes: FileNameHeader = header[72..132].try_into().unwrap();
+        println!("{:?} FILENAME", &file_name_in_bytes);
+        let filtered_filename: Vec<u8> = file_name_in_bytes.iter()
+                                                           .filter(|&x| x.is_ascii() && *x != 0)
+                                                           .map(|x| x.to_owned())
+                                                           .collect();
+        println!("{:?}", &filtered_filename);
 
-        let file_name_in_string: String = match String::from_utf8(file_name_in_bytes.to_vec()) {
+        let file_name_in_string: String = match String::from_utf8(filtered_filename) {
             Ok(x) => x,
-            Err(x) => return Err("Couldn't fetch the file name".to_string()),
+            Err(x) => return Err(format!("Couldn't fetch the file name : {}", x)),
         };
+        println!("{}", &file_name_in_string);
 
         Ok(FileMetaData {
             checksum: checksum,
