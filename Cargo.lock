@@ -533,6 +533,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "flate2",
+ "log",
  "screenshots",
  "sha256",
  "tokio",

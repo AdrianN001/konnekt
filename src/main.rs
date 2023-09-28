@@ -9,22 +9,23 @@ mod file_share;
 mod screen_share;
 mod traits;
 #[tokio::main]
-async fn main() {
-    
-    let (tx, rx): (Sender<Vec<u8>>, Receiver<Vec<u8>>) = mpsc::channel(10);
-
+async fn main() -> Result<(), Error>{
+    let (sender, receiver) = mpsc::channel::<Vec<u8>>(10);
+    //let _ = send_file("192.168.1.15".to_string(), 6000, "~/Videos/test.mp4".to_string())?;
     tokio::task::spawn_blocking(|| {
         let mut service =
-            file_share::main::FileShareService::new(6000, "File Sharing Service Started").unwrap();
+            file_share::server::FileShareService::new(6000, "File Sharing Service Started").unwrap();
         service.start();
     });
 
     let screen_share_service = screen_share::server::ScreenShareService::new(
         7000,
-        rx,
+        receiver,
         "Screen Sharing Service Started".to_string(),
     ).unwrap();
 
     thread::spawn(move || screen_share_service.start());
+
+    Ok(())
 
 }

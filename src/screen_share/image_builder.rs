@@ -18,7 +18,7 @@ fn take_screenshot(disply_id: usize) -> Result<Vec<u8>, Error> {
         .enumerate()
         .filter(|(index, _)| index % 3 != 0)
         .map(|(_, item)| item.to_owned())
-        .collect::<Vec<_>>())
+        .collect::<Vec<u8>>())
 }
 
 // TODO WRITE IT
