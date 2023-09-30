@@ -1,23 +1,29 @@
 mod file_share;
 mod traits;
 mod scout;
+mod shared;
 
 use anyhow::Error;
 use std::thread;
+use shared::file::FileDescriptor;
 use file_share::sender::send_file;
 use scout::{*, user::User};
 use local_ip_address::local_ip;
 use ctrlc;
-
+use traits::file::Serializable;
+use shared::snapshot::Snapshot;
 
 
 use crate::traits::server::ConnectableService;
 
 #[tokio::main]
 async fn main() -> Result<(), Error>{
-    //let _ = send_file("192.168.1.15".to_string(), 6000, "~/Videos/test.mp4".to_string())?;
     let mut your_profile = scout::initiator::broadcast_live().await?;
-    print!("{:?}", your_profile);
+
+
+    let snapshot = Snapshot::create().await?;
+    snapshot.write_to_file("/home/noirangel/Shared/.snapshots/1.txt").await?;
+    println!("{:?}", snapshot);
 
     let _ = ctrlc::set_handler( move  || {
 
