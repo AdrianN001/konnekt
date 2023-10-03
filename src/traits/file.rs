@@ -6,6 +6,7 @@ pub trait Serializable {
 
     fn serialize_to_bin(&self) -> Vec<u8>; 
     fn deserialize_from_bin(binary: &mut Vec<u8>) -> Self;
+    
 }
 
 pub trait Changeable {

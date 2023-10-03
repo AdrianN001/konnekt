@@ -14,7 +14,7 @@ use super::snapshot::{Snapshot, Changes};
 
 #[derive( Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FileDescriptor{
-    file_name: String,
+    pub file_name: String,
     file_size: u64,
     checksum: String
 }
@@ -130,7 +130,7 @@ impl Changeable for FileDescriptor{
 
         for file in last_snapshot.files.iter(){
             if file.file_name == self.file_name && self.checksum == file.checksum {
-                return Changes::None;
+                return Changes::Unmodified;
             }else if file.file_name == self.file_name && self.checksum != file.checksum {
                 return Changes::Modified;
             }else if file.file_name != self.file_name && self.checksum == file.checksum {

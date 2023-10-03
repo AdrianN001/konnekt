@@ -5,12 +5,7 @@ mod shared;
 
 use anyhow::Error;
 use std::thread;
-use shared::file::FileDescriptor;
-use file_share::sender::send_file;
-use scout::{*, user::User};
-use local_ip_address::local_ip;
 use ctrlc;
-use traits::file::Serializable;
 use shared::snapshot::Snapshot;
 
 
@@ -21,9 +16,19 @@ async fn main() -> Result<(), Error>{
     let mut your_profile = scout::initiator::broadcast_live().await?;
 
 
-    let snapshot = Snapshot::create().await?;
-    snapshot.write_to_file("/home/noirangel/Shared/.snapshots/1.txt").await?;
+    let snapshot = Snapshot::create("6").await?;
+    snapshot.write_to_file().await?;
+
+    let prev_snapshot = Snapshot::read_from_fs("3").await?;
+
+    let differences = snapshot.compare(&prev_snapshot);
+
     println!("{:?}", snapshot);
+    println!("{:?}", prev_snapshot);
+   
+    for cell in differences {
+        println!("{:?} => {:?}", (cell.0).file_name, cell.1);
+    }
 
     let _ = ctrlc::set_handler( move  || {
 
