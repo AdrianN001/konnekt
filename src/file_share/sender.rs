@@ -6,6 +6,7 @@ use std::net::*;
 use super::metadata::FileMetaData;
 
 
+#[allow(dead_code)]
 pub fn send_file(ip_address: String, port: i32, file_name: String) -> Result<(), Error> {
     let mut stream = TcpStream::connect(format!("{}:{}", ip_address, port))?;
     let mut file_hook = File::open(&file_name)?;
@@ -15,7 +16,7 @@ pub fn send_file(ip_address: String, port: i32, file_name: String) -> Result<(),
 
     let _ = stream.write_all(&header_packet);
 
-    let _ = std::io::copy(&mut file_hook, &mut stream );
+    let _ = std::io::copy(&mut file_hook, &mut stream);
 
     Ok(())
 }
