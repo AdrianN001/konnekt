@@ -17,9 +17,7 @@ pub struct FileShareService {
 
 
 impl server::ConnectableService for FileShareService {
-    fn new(port: i32, debug_text: &str) -> Result<FileShareService, String>
-    where
-        FileShareService: Sized,
+    fn new(port: i32, debug_text: &str) -> Result<Self, String>
     {
         let tcp_listener = match std::net::TcpListener::bind(format!("0.0.0.0:{}", port)) {
             Ok(x) => x,
@@ -38,6 +36,8 @@ impl server::ConnectableService for FileShareService {
         loop {
             let (mut stream, _addr) = self.listener.accept().unwrap();
 
+            println!("{:?}", _addr);
+
             // Read the header from the file;
             let mut header: FileHeader = [0; 68];
 
@@ -45,14 +45,17 @@ impl server::ConnectableService for FileShareService {
 
             // Debug
             // TODO Create something for println
-            if let Ok(metadata) = FileMetaData::from_bit_represention(&header) {
-                thread::spawn(move ||{
-                    metadata.log_info();
 
-                    let _ = create_file_from_metadata(&metadata, &mut stream);
-                });
-               
-            }
+            match FileMetaData::from_bit_represention(&header){
+                Ok(metadata) => {
+                    thread::spawn(move ||{
+                        
+                        let _ = create_file_from_metadata(&metadata, &mut stream);
+                    });
+                },
+                Err(_error_value) => {log::error!("[!] File share failed")},
+             }
+            
         }
     }
 }

@@ -13,6 +13,7 @@ pub type FileNameHeader = [u8; 60];
 pub type FileSizeHeader = [u8; 8];
 
 
+#[derive(Debug)]
 pub struct FileMetaData {
     pub file_size: u64,
     pub file_name: String,
@@ -30,8 +31,9 @@ impl FileMetaData {
         let file_size_in_unsigned = u64::from_be_bytes(file_size_in_bytes);
 
         let file_name_in_bytes: FileNameHeader = header[8..header.len()].try_into().unwrap();
+        let filtered_file_name: Vec<u8> = file_name_in_bytes.into_iter().filter(|x| *x != ('\0' as u8)).collect();
 
-        let file_name_in_string: String = match String::from_utf8(file_name_in_bytes.to_vec()) {
+        let file_name_in_string: String = match String::from_utf8(filtered_file_name) {
             Ok(x) => x,
             Err(x) => return Err(x.into()),
         };
