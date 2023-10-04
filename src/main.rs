@@ -1,18 +1,44 @@
+mod file_share;
+mod traits;
+mod scout;
+mod shared;
+
 use anyhow::Error;
-use screen_share::server::ScreenShareSenderService;
 use std::thread;
-use file_share::sender::send_file;
-use tokio::{self, sync::mpsc, sync::mpsc::Receiver, sync::mpsc::Sender};
+use ctrlc;
+use shared::snapshot::Snapshot;
+
 
 use crate::traits::server::ConnectableService;
-mod file_share;
-mod screen_share;
-mod traits;
+
 #[tokio::main]
 async fn main() -> Result<(), Error>{
-    let (_sender, receiver) = mpsc::channel::<Vec<u8>>(10);
-   // let _ = send_file("192.168.1.15".to_string(), 6000, "~/Videos/test.mp4".to_string())?;
-    tokio::task::spawn_blocking(|| {
+    let mut your_profile = scout::initiator::broadcast_live().await?;
+
+
+    let snapshot = Snapshot::create("6").await?;
+    snapshot.write_to_file().await?;
+
+    let prev_snapshot = Snapshot::read_from_fs("3").await?;
+
+    let differences = snapshot.compare(&prev_snapshot);
+
+    println!("{:?}", snapshot);
+    println!("{:?}", prev_snapshot);
+   
+    for cell in differences {
+        println!("{:?} => {:?}", (cell.0).file_name, cell.1);
+    }
+
+    let _ = ctrlc::set_handler( move  || {
+
+        let _ = scout::initiator::broadcast_stop(&mut your_profile);
+        std::process::exit(1);
+    });
+
+    
+    
+    let file_share_thread = thread::spawn(|| {
         let mut service =
             file_share::server::FileShareService::new(6000, "File Sharing Service Started").unwrap();
         service.start();
